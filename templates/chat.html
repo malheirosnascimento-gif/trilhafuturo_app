@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Chat Mentor{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper" style="margin-top:20px;">
+  <div class="card chat-card">
+    <h2 class="chat-title">Chat Mentor 🤖</h2>
+    <form id="chatForm" method="POST" class="form form-chat">
+      <div class="mb-2">
+        <label for="question">Pergunte sobre uma carreira (ex: UX, Marketing, Dados):</label>
+        <input id="question" type="text" name="question" required placeholder="Digite aqui...">
+      </div>
+      <div class="btn-container">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </div>
+    </form>
+
+    {% if reply %}
+      <div class="chatbox">
+        <p><strong>Chat:</strong> {{ reply }}</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

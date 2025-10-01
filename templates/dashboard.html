@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="margin-top:20px;">
+  <h2>Bem-vindo(a), {{ session.get('usuario_nome', 'Usuário') }}</h2>
+
+  <section class="stats-cards">
+    <div class="card stat-card">
+      <div class="stat-label">Usuários cadastrados</div>
+      <div class="stat-value">{{ counts.total_users }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-label">Testes realizados</div>
+      <div class="stat-value">{{ counts.results }}</div>
+    </div>
+  </section>
+
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="btn-container" style="margin-top:20px;">
+    <a href="{{ url_for('chat') }}" class="btn btn-primary">Falar com Chat Mentor</a>
+    <a href="{{ url_for('feedback') }}" class="btn btn-secondary">Enviar Feedback</a>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  fetch("{{ url_for('api_stats') }}")
+    .then(r => r.json())
+    .then(data => {
+      const ctx = document.getElementById('chart');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(data),
+          datasets: [{
+            data: Object.values(data),
+            backgroundColor: ['#4b7bec', '#45aaf2', '#26de81'],
+          }]
+        },
+        options: {
+          responsive: true
+        }
+      });
+    });
+</script>
+{% endblock %}

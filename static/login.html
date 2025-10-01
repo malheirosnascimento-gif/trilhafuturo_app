@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Entrar{% endblock %}
+
+{% block content %}
+<div class="grid" style="margin-top:20px;">
+
+  <!-- Formulário de Login -->
+  <div class="col-4 card form-card">
+    <h3>Entrar</h3>
+    <form method="POST" class="validate form-login">
+      <div class="mb-2">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" required class="form-control" placeholder="seu@email.com">
+      </div>
+      <div class="mb-2">
+        <label for="password">Senha</label>
+        <input id="password" name="password" type="password" required class="form-control" placeholder="••••••••">
+      </div>
+      <div class="btn-container">
+        <button class="btn btn-primary" type="submit">Entrar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Convite para criar conta -->
+  <div class="col-8 card info-card">
+    <h4>Não tem conta?</h4>
+    <p class="small-muted">
+      Crie seu perfil e acompanhe sua evolução.
+    </p>
+    <a class="btn btn-outline" href="{{ url_for('register') }}">Criar conta</a>
+  </div>
+
+</div>
+{% endblock %}

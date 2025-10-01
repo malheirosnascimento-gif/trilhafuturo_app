@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="form-wrapper" style="margin-top:20px;">
+  <div class="card form-card">
+    <h2>Entrar na conta</h2>
+    <form method="POST" class="validate form-login">
+      <div class="mb-2">
+        <label for="email">Email</label>
+        <input id="email" type="email" name="email" required placeholder="seu@email.com">
+      </div>
+      <div class="mb-2">
+        <label for="password">Senha</label>
+        <input id="password" type="password" name="password" required placeholder="••••••••">
+      </div>
+      <div class="btn-container">
+        <button type="submit" class="btn btn-primary">Entrar</button>
+      </div>
+    </form>
+    <p class="mt-3">Não tem conta? <a href="{{ url_for('register') }}">Cadastre-se</a>.</p>
+  </div>
+</div>
+{% endblock %}

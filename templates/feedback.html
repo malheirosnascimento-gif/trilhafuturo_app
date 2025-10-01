@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Feedback{% endblock %}
+
+{% block content %}
+<div class="feedback-wrapper" style="margin-top:20px;">
+  <div class="card feedback-card">
+    <h2 class="feedback-title">Envie seu Feedback 💬</h2>
+    <form method="POST" class="validate form-feedback">
+      <textarea name="message" placeholder="O que você achou da plataforma?" required></textarea>
+      <div class="btn-container">
+        <button type="submit" class="btn btn-primary">Enviar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

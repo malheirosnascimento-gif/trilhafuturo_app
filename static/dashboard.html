@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="grid" style="margin-top:20px;">
+
+  <!-- Área principal -->
+  <div class="col-8 card">
+    <h3>Dashboard</h3>
+    <p class="small-muted">
+      Olá, {{ session.get('usuario_nome', 'Usuário') }} — acompanhe seu progresso.
+    </p>
+
+    <!-- Gráfico de perfis -->
+    <div style="height:260px; margin-top:16px;">
+      <canvas id="perfilChart"></canvas>
+    </div>
+
+    <!-- Histórico de resultados -->
+    <h5 class="mt-3">Histórico de seus resultados</h5>
+    {% if rows %}
+      <ul>
+        {% for r in rows %}
+          <li>{{ r['perfil']|capitalize }} — {{ r['created_at'] }}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>Você ainda não realizou o teste.</p>
+    {% endif %}
+  </div>
+
+  <!-- Área lateral -->
+  <div class="col-4 card">
+    <h4>Estatísticas Gerais</h4>
+    <div class="stats">
+      <div>
+        <div class="small-muted">Usuários cadastrados</div>
+        <div class="count-up" data-to="{{ counts.total_users|default(0) }}">0</div>
+      </div>
+      <div>
+        <div class="small-muted">Testes realizados</div>
+        <div class="count-up" data-to="{{ counts.results|default(0) }}">0</div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <a class="btn btn-primary" href="{{ url_for('chat') }}">Chat Mentor</a>
+      <a class="btn btn-secondary" href="{{ url_for('feedback') }}">Enviar Feedback</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Script do gráfico -->
+<script>
+  const ctx = document.getElementById('perfilChart');
+  if (ctx) {
+    fetch("{{ url_for('api_stats') }}")
+      .then(response => response.json())
+      .then(data => {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Perfis Vocacionais',
+              data: data.values,
+              backgroundColor: ['#7B61FF', '#FF8A00', '#00BFA6'],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+        });
+      });
+  }
+</script>
+{% endblock %}

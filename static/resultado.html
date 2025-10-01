@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Resultado do Teste{% endblock %}
+
+{% block content %}
+<div class="grid" style="margin-top:20px;">
+
+  <!-- Resultado principal -->
+  <div class="col-8 card result-card">
+    <h3>Olá, {{ name }}!</h3>
+    <p class="small-muted">Seu perfil identificado: <strong>{{ profile|capitalize }}</strong></p>
+
+    <!-- Carreiras sugeridas -->
+    <section class="result-section">
+      <h5>Carreiras sugeridas</h5>
+      <ul class="result-list">
+        {% for c in rec.carreiras %}
+          <li>{{ c }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <!-- Trilhas recomendadas -->
+    <section class="result-section">
+      <h5>Trilhas recomendadas</h5>
+      <ul class="result-list">
+        {% for t in rec.trilhas %}
+          <li><a href="{{ t.link }}" target="_blank">{{ t.titulo }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <div class="btn-container">
+      <a class="btn btn-primary" href="{{ url_for('dashboard') }}">Ir para Dashboard</a>
+    </div>
+  </div>
+
+  <!-- Lateral -->
+  <div class="col-4 card side-card">
+    <h4>Compartilhe</h4>
+    <p class="small-muted">Compartilhe o resultado com um amigo e compare perfis.</p>
+  </div>
+
+</div>
+{% endblock %}

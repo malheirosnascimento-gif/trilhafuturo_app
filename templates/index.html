@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Início{% endblock %}
+
+{% block content %}
+<div class="hero-card" style="margin-top:20px;">
+  <h1>Bem-vindo(a) à <span class="highlight">TrilhaFuturo</span></h1>
+  <p class="small-muted">Descubra sua melhor carreira com nosso teste vocacional — 100% digital e gratuito.</p>
+  <div class="btn-container">
+    <a href="{{ url_for('teste') }}" class="btn btn-primary">Começar o teste</a>
+  </div>
+</div>
+{% endblock %}

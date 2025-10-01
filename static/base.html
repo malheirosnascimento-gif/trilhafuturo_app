@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TrilhaFuturo</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <meta name="description" content="Plataforma de orientação vocacional e trilhas personalizadas">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">TrilhaFuturo</div>
+      <nav class="nav-actions">
+        <a href="{{ url_for('index') }}">Início</a>
+        {% if session.get('usuario_id') %}
+          <a href="{{ url_for('dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('logout') }}">Sair</a>
+        {% else %}
+          <a href="{{ url_for('register') }}">Cadastrar</a>
+          <a href="{{ url_for('login') }}">Entrar</a>
+        {% endif %}
+      </nav>
+    </header>
+
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+      <small>TrilhaFuturo &copy; {{ now.year if now else "2025" }} • UFMS Digital</small>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
