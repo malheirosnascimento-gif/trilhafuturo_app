@@ -1,50 +1,306 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="dashboard-wrapper" style="margin-top:20px;">
-  <h2>Bem-vindo(a), {{ session.get('usuario_nome', 'Usuário') }}</h2>
+<div class="grid" style="margin-top:20px; align-items: flex-start;">
 
-  <section class="stats-cards">
-    <div class="card stat-card">
-      <div class="stat-label">Usuários cadastrados</div>
-      <div class="stat-value">{{ counts.total_users }}</div>
-    </div>
-    <div class="card stat-card">
-      <div class="stat-label">Testes realizados</div>
-      <div class="stat-value">{{ counts.results }}</div>
-    </div>
-  </section>
+  <div class="col-8">
+    <div class="card">
+      <h3>Bem-vindo(a), {{ nome or 'Usuário' }}!</h3>
+      <p class="small-muted">Acompanhe seu progresso e explore suas trilhas vocacionais.</p>
 
-  <div class="chart-container">
-    <canvas id="chart"></canvas>
+      <h5 class="mt-3">Distribuição Geral de Perfis</h5>
+      <div style="height:260px; margin-top:16px;">
+        <canvas id="perfilChart"></canvas>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-top: 1rem;">
+      <h5>Seu Histórico de Testes</h5>
+      {% if historico_testes %}
+        <ul class="list-group">
+          {% for teste in historico_testes %}
+            <li class="list-group-item">
+              <strong>{{ teste['perfil']|capitalize }}</strong> — 
+              <span class="small-muted">Realizado em: {{ teste['data_teste']|datetimeformat('%d/%m/%Y %H:%M') }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div class="empty-state">
+          <p>Você ainda não realizou nenhum teste.</p>
+          <a href="{{ url_for('teste') }}" class="btn btn-primary">Começar meu teste vocacional</a>
+        </div>
+      {% endif %}
+    </div>
   </div>
 
-  <div class="btn-container" style="margin-top:20px;">
-    <a href="{{ url_for('chat') }}" class="btn btn-primary">Falar com Chat Mentor</a>
-    <a href="{{ url_for('feedback') }}" class="btn btn-secondary">Enviar Feedback</a>
+  <div class="col-4">
+    <div class="card">
+      <h4>Suas Estatísticas</h4>
+      <div class="stats-list">
+        <div>
+          <span>Testes Realizados</span>
+          <strong class="count-up" data-to="{{ total_testes }}">{{ total_testes }}</strong>
+        </div>
+        <div>
+          <span>Feedbacks Enviados</span>
+          <strong class="count-up" data-to="{{ total_feedbacks }}">{{ total_feedbacks }}</strong>
+        </div>
+        <div>
+          <span>Conversas no Chat</span>
+          <strong id="conversas-count">0</strong>
+        </div>
+      </div>
+
+      <div class="dashboard-actions">
+        <a class="btn btn-accent" href="{{ url_for('teste') }}">Fazer novo teste</a>
+        <a class="btn btn-outline" href="{{ url_for('feedback') }}">Enviar Feedback</a>
+        <a class="btn btn-outline" href="{{ url_for('chat') }}" style="margin-top: 0.5rem;">Chat com IA</a>
+      </div>
+    </div>
+
+    <!-- Card de Últimos Feedbacks -->
+    {% if ultimos_feedbacks %}
+    <div class="card" style="margin-top: 1rem;">
+      <h5>Seus Últimos Feedbacks</h5>
+      <div class="feedback-list">
+        {% for feedback in ultimos_feedbacks %}
+        <div class="feedback-item">
+          <p class="feedback-text">"{{ feedback['comentario'][:100] }}{% if feedback['comentario']|length > 100 %}...{% endif %}"</p>
+          <span class="small-muted">{{ feedback['data_criacao']|datetimeformat('%d/%m/%Y') }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  fetch("{{ url_for('api_stats') }}")
-    .then(r => r.json())
-    .then(data => {
-      const ctx = document.getElementById('chart');
-      new Chart(ctx, {
-        type: 'pie',
-        data: {
-          labels: Object.keys(data),
-          datasets: [{
-            data: Object.values(data),
-            backgroundColor: ['#4b7bec', '#45aaf2', '#26de81'],
-          }]
-        },
-        options: {
-          responsive: true
+  document.addEventListener('DOMContentLoaded', () => {
+    // Carregar estatísticas da API
+    fetch("{{ url_for('api_stats') }}")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Falha ao carregar estatísticas.');
         }
+        return response.json();
+      })
+      .then(data => {
+        // Atualizar contador de conversas
+        const conversasCount = document.getElementById('conversas-count');
+        if (conversasCount) {
+          conversasCount.textContent = data.total_conversas;
+          conversasCount.setAttribute('data-to', data.total_conversas);
+          
+          // Animar o contador de conversas também
+          animateCounter(conversasCount, data.total_conversas);
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao carregar estatísticas:', error);
       });
+
+    // Gráfico de distribuição de perfis
+    const ctx = document.getElementById('perfilChart');
+    if (ctx) {
+      fetch("{{ url_for('profile_distribution_chart') }}")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Falha ao carregar dados do gráfico.');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!data.labels || data.labels.length === 0) {
+            ctx.parentElement.innerHTML = '<p class="text-center small-muted">Ainda não há dados suficientes para exibir o gráfico.</p>';
+            return;
+          }
+
+          // Verificar se há erro na resposta
+          if (data.error) {
+            throw new Error(data.error);
+          }
+
+          new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                label: 'Perfis Vocacionais',
+                data: data.values,
+                backgroundColor: [
+                  '#4b7bec', // Azul - Exatas
+                  '#26de81', // Verde - Biológicas  
+                  '#fc5c65', // Vermelho - Humanas
+                  '#fed330', // Amarelo - outros
+                  '#a55eea', // Roxo
+                  '#fd9644'  // Laranja
+                ],
+                borderColor: '#ffffff',
+                borderWidth: 2
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { 
+                  position: 'bottom',
+                  labels: {
+                    padding: 20,
+                    font: {
+                      family: "'Poppins', sans-serif",
+                      size: 12
+                    }
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function(context) {
+                      const label = context.label || '';
+                      const value = context.raw || 0;
+                      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                      const percentage = Math.round((value / total) * 100);
+                      return `${label}: ${value} (${percentage}%)`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Erro no gráfico:', error);
+          ctx.parentElement.innerHTML = `
+            <div class="text-center">
+              <p class="small-muted">Não foi possível carregar o gráfico.</p>
+              <button onclick="location.reload()" class="btn btn-sm btn-outline">Tentar Novamente</button>
+            </div>
+          `;
+        });
+    }
+
+    // Animação de contagem para todos os números
+    const counters = document.querySelectorAll('.count-up');
+    counters.forEach(counter => {
+      const target = +counter.getAttribute('data-to');
+      const current = +counter.textContent;
+      animateCounter(counter, target, current);
     });
+  });
+
+  // Função para animar contadores
+  function animateCounter(element, target, current = 0) {
+    // Só anima se o número for maior que 0 e diferente do atual
+    if (target > 0 && target !== current) {
+      let count = current;
+      const duration = 1500;
+      const increment = target > current ? 1 : -1;
+      const stepCount = Math.abs(target - current);
+      const stepTime = Math.max(10, Math.abs(Math.floor(duration / stepCount)));
+
+      const timer = setInterval(() => {
+        count += increment;
+        element.textContent = count;
+        
+        if (count === target) {
+          clearInterval(timer);
+        }
+      }, stepTime);
+    }
+  }
+
+  // Função para recarregar a página em caso de erro
+  function reloadPage() {
+    location.reload();
+  }
 </script>
+
+<style>
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stats-list > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.stats-list > div:last-child {
+  border-bottom: none;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feedback-item {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #4b7bec;
+}
+
+.feedback-text {
+  margin: 0 0 0.5rem 0;
+  font-style: italic;
+  color: #333;
+  line-height: 1.4;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.list-group {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.list-group-item {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.list-group-item:last-child {
+  border-bottom: none;
+}
+
+.small-muted {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+</style>
 {% endblock %}

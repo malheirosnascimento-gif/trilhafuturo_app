@@ -2,67 +2,141 @@
 {% block title %}Teste Vocacional{% endblock %}
 
 {% block content %}
-<div class="grid" style="margin-top:20px;">
+<div class="grid" style="margin-top:20px; align-items: flex-start;">
 
-  <!-- Quiz -->
   <div class="col-8 card teste-card">
     <h3 class="title">Teste Vocacional Gamificado</h3>
-    <p class="subtitle small-muted">Responda com sinceridade — o teste é curto.</p>
+    <p class="subtitle small-muted">Responda com sinceridade para encontrar sua trilha.</p>
 
-    <form id="testeForm" action="{{ url_for('resultado') }}" method="POST" class="validate form-quiz">
-      <!-- Questão 1 -->
-      <div class="mb-3 question">
-        <label>1) O que prefere em um sábado?</label><br>
-        <label><input type="radio" name="q1" value="analitico" required> Organizar dados / planilhas</label><br>
-        <label><input type="radio" name="q1" value="criativo"> Criar artes ou conteúdo</label>
-      </div>
+    <div class="progress-bar-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+    <div id="progressText" class="progress-text small-muted">0 de 6 respondidas</div>
 
-      <!-- Questão 2 -->
-      <div class="mb-3 question">
-        <label>2) Em equipe você costuma:</label><br>
-        <label><input type="radio" name="q2" value="analitico" required> Liderar a parte técnica / organização</label><br>
-        <label><input type="radio" name="q2" value="criativo"> Propor ideias e conceitos</label>
-      </div>
+    <form id="testeForm" action="{{ url_for('teste') }}" method="POST" class="form-quiz">
+      
+      <div class="question-group">
+        
+        <div class="question">
+          <label class="question-title">1) Em um sábado livre, você prefere?</label>
+          <div class="question-options">
+            <label class="question-option" for="q1_opt1">
+              <input type="radio" id="q1_opt1" name="q1" value="analitico" required>
+              <span>Organizar planilhas ou estudar um sistema lógico</span>
+            </label>
+            <label class="question-option" for="q1_opt2">
+              <input type="radio" id="q1_opt2" name="q1" value="criativo">
+              <span>Criar um design, escrever um texto ou consumir arte</span>
+            </label>
+          </div>
+        </div>
 
-      <!-- Questão 3 -->
-      <div class="mb-3 question">
-        <label>3) Prefere tarefas:</label><br>
-        <label><input type="radio" name="q3" value="analitico" required> Repetitivas e estruturadas</label><br>
-        <label><input type="radio" name="q3" value="criativo"> Variadas e com liberdade</label>
-      </div>
+        <div class="question">
+          <label class="question-title">2) Em um trabalho em equipe, você costuma:</label>
+          <div class="question-options">
+            <label class="question-option" for="q2_opt1">
+              <input type="radio" id="q2_opt1" name="q2" value="analitico" required>
+              <span>Liderar a parte técnica e a organização das tarefas</span>
+            </label>
+            <label class="question-option" for="q2_opt2">
+              <input type="radio" id="q2_opt2" name="q2" value="criativo">
+              <span>Propor ideias, conceitos e cuidar da apresentação visual</span>
+            </label>
+          </div>
+        </div>
 
-      <!-- Questão 4 -->
-      <div class="mb-3 question">
-        <label>4) Aprender você prefere:</label><br>
-        <label><input type="radio" name="q4" value="analitico" required> Cursos de exatas / ciência</label><br>
-        <label><input type="radio" name="q4" value="criativo"> Cursos de design / comunicação</label>
-      </div>
+        <div class="question">
+          <label class="question-title">3) Você prefere tarefas:</label>
+          <div class="question-options">
+            <label class="question-option" for="q3_opt1">
+              <input type="radio" id="q3_opt1" name="q3" value="analitico" required>
+              <span>Repetitivas e com uma estrutura clara</span>
+            </label>
+            <label class="question-option" for="q3_opt2">
+              <input type="radio" id="q3_opt2" name="q3" value="criativo">
+              <span>Variadas e que oferecem liberdade criativa</span>
+            </label>
+          </div>
+        </div>
 
-      <!-- Questão 5 -->
-      <div class="mb-3 question">
-        <label>5) Você gosta de:</label><br>
-        <label><input type="radio" name="q5" value="analitico" required> Resolver problemas lógicos</label><br>
-        <label><input type="radio" name="q5" value="criativo"> Criar narrativas / arte</label>
-      </div>
+        <div class="question">
+          <label class="question-title">4) Na hora de aprender, você prefere:</label>
+          <div class="question-options">
+            <label class="question-option" for="q4_opt1">
+              <input type="radio" id="q4_opt1" name="q4" value="analitico" required>
+              <span>Cursos de exatas, lógica e ciência de dados</span>
+            </label>
+            <label class="question-option" for="q4_opt2">
+              <input type="radio" id="q4_opt2" name="q4" value="criativo">
+              <span>Cursos de design, comunicação e artes</span>
+            </label>
+          </div>
+        </div>
 
-      <!-- Questão 6 -->
-      <div class="mb-3 question">
-        <label>6) Seu tipo de projeto ideal:</label><br>
-        <label><input type="radio" name="q6" value="analitico" required> Sistema bem arquitetado</label><br>
-        <label><input type="radio" name="q6" value="criativo"> Produto com apelo visual</label>
+        <div class="question">
+          <label class="question-title">5) Você sente mais satisfação ao:</label>
+          <div class="question-options">
+            <label class="question-option" for="q5_opt1">
+              <input type="radio" id="q5_opt1" name="q5" value="analitico" required>
+              <span>Resolver um problema lógico complexo</span>
+            </label>
+            <label class="question-option" for="q5_opt2">
+              <input type="radio" id="q5_opt2" name="q5" value="criativo">
+              <span>Criar uma narrativa ou uma peça de arte</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="question">
+          <label class="question-title">6) Seu tipo de projeto ideal envolve:</label>
+          <div class="question-options">
+            <label class="question-option" for="q6_opt1">
+              <input type="radio" id="q6_opt1" name="q6" value="analitico" required>
+              <span>Construir um sistema bem arquitetado e eficiente</span>
+            </label>
+            <label class="question-option" for="q6_opt2">
+              <input type="radio" id="q6_opt2" name="q6" value="criativo">
+              <span>Desenvolver um produto com forte apelo visual e emocional</span>
+            </label>
+          </div>
+        </div>
+
       </div>
 
       <div class="btn-container">
-        <button class="btn btn-primary" type="submit">Ver Resultado</button>
+        <button class="btn btn-primary" type="submit">Ver Meu Resultado</button>
       </div>
     </form>
   </div>
 
-  <!-- Explicação lateral -->
   <div class="col-4 card side-card">
-    <h4>Como funciona</h4>
-    <p class="small-muted">Pontuamos suas respostas e sugerimos trilhas e carreiras com base no seu perfil.</p>
+    <h4>Como funciona o teste?</h4>
+    <p class="small-muted">
+      Suas respostas nos ajudam a identificar seus interesses e aptidões. Com base nisso, calculamos um perfil vocacional e sugerimos as melhores trilhas e carreiras para você explorar. Não há resposta errada!
+    </p>
   </div>
 
 </div>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('testeForm');
+    const totalQuestions = form.querySelectorAll('.question').length; // AGORA VAI CONTAR 6
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+
+    function updateProgress() {
+      const checkedRadios = form.querySelectorAll('input[type="radio"]:checked').length;
+      const progressPercentage = (checkedRadios / totalQuestions) * 100;
+      
+      progressBar.style.width = progressPercentage + '%';
+      progressText.textContent = `${checkedRadios} de ${totalQuestions} respondidas`;
+    }
+
+    form.addEventListener('change', updateProgress);
+    updateProgress();
+  });
+</script>
 {% endblock %}

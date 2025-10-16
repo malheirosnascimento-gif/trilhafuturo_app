@@ -1,16 +1,213 @@
-{% extends 'base.html' %}
-{% block title %}Feedback{% endblock %}
+{% extends "base.html" %}
+{% block title %}Enviar Feedback{% endblock %}
 
 {% block content %}
-<div class="feedback-wrapper" style="margin-top:20px;">
-  <div class="card feedback-card">
-    <h2 class="feedback-title">Envie seu Feedback 💬</h2>
-    <form method="POST" class="validate form-feedback">
-      <textarea name="message" placeholder="O que você achou da plataforma?" required></textarea>
+<div class="grid" style="justify-content: center; margin-top: 40px;">
+
+  <div class="col-8 card feedback-card">
+    <h3>Sua Opinião é Importante</h3>
+    <p class="small-muted">Conte-nos o que achou da plataforma ou sugira novas ideias. Nós lemos todas as mensagens!</p>
+
+    <!-- Exibir mensagens flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="post" class="form-feedback">
+      <div class="mb-2">
+        <label for="feedbackMessage">Sua mensagem:</label>
+        <textarea 
+          id="feedbackMessage" 
+          name="message" 
+          rows="5" 
+          class="form-control" 
+          placeholder="Digite seu feedback aqui..." 
+          required 
+          minlength="10"
+          maxlength="1000">{{ request.form.message if request.form.message }}</textarea>
+        
+        <div id="charCounter" class="char-counter small-muted">
+          0/1000
+        </div>
+      </div>
       <div class="btn-container">
-        <button type="submit" class="btn btn-primary">Enviar</button>
+        <button id="submitBtn" class="btn btn-primary" type="submit">Enviar Feedback</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="margin-left: 0.5rem;">Voltar ao Dashboard</a>
       </div>
     </form>
   </div>
+
 </div>
+
+<style>
+.feedback-card {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.form-feedback {
+  margin-top: 2rem;
+}
+
+.mb-2 {
+  margin-bottom: 1.5rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #4b7bec;
+  box-shadow: 0 0 0 2px rgba(75, 123, 236, 0.1);
+}
+
+.char-counter {
+  text-align: right;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.char-counter.valid {
+  color: #26de81;
+}
+
+.char-counter.invalid {
+  color: #fc5c65;
+}
+
+.btn-container {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.alert-warning {
+  color: #856404;
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.alert-info {
+  color: #0c5460;
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .col-8 {
+    width: 100%;
+  }
+  
+  .btn-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .btn-container .btn {
+    margin-left: 0 !important;
+    margin-top: 0.5rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const textarea = document.getElementById('feedbackMessage');
+    const charCounter = document.getElementById('charCounter');
+    const submitBtn = document.getElementById('submitBtn');
+    const minLength = 10;
+    const maxLength = 1000;
+
+    // Função para atualizar o contador e validação
+    function updateCharCounter() {
+      const currentLength = textarea.value.length;
+      
+      // Atualiza o texto do contador
+      charCounter.textContent = `${currentLength}/${maxLength}`;
+      
+      // Muda a cor baseado no comprimento
+      if (currentLength >= minLength && currentLength <= maxLength) {
+        charCounter.classList.add('valid');
+        charCounter.classList.remove('invalid');
+        submitBtn.disabled = false;
+      } else if (currentLength > maxLength) {
+        charCounter.classList.add('invalid');
+        charCounter.classList.remove('valid');
+        submitBtn.disabled = true;
+      } else {
+        charCounter.classList.add('invalid');
+        charCounter.classList.remove('valid');
+        submitBtn.disabled = true;
+      }
+    }
+
+    // Event listener para input
+    textarea.addEventListener('input', updateCharCounter);
+    
+    // Event listener para submit do form
+    document.querySelector('.form-feedback').addEventListener('submit', (e) => {
+      const currentLength = textarea.value.length;
+      
+      if (currentLength < minLength) {
+        e.preventDefault();
+        alert('O feedback deve ter pelo menos 10 caracteres.');
+        return false;
+      }
+      
+      if (currentLength > maxLength) {
+        e.preventDefault();
+        alert('O feedback não pode ter mais de 1000 caracteres.');
+        return false;
+      }
+    });
+
+    // Inicializa o contador
+    updateCharCounter();
+    
+    // Mantém o valor do textarea se houver submissão com erro
+    {% if request.method == 'POST' and request.form.message %}
+      textarea.value = {{ request.form.message | tojson }};
+      updateCharCounter();
+    {% endif %}
+  });
+</script>
 {% endblock %}

@@ -3,22 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Trilha Futuro - Encontre sua carreira ideal com testes vocacionais e mentoria.">
+  
   <title>{% block title %}Trilha Futuro{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+
+  {% block head_scripts %}{% endblock %}
 </head>
 <body>
   <header class="header">
     <div class="container header-content">
-      <h1 class="brand">🌱 Trilha Futuro</h1>
+      <a href="{{ url_for('index') }}" class="brand-link">
+        <h1 class="brand">🌱 Trilha Futuro</h1>
+      </a>
       <nav class="nav-actions">
         <a href="{{ url_for('index') }}">Início</a>
         {% if session.get('usuario_id') %}
           <a href="{{ url_for('dashboard') }}">Painel</a>
-          <a href="{{ url_for('logout') }}">Sair</a>
+          <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Sair</a>
         {% else %}
           <a href="{{ url_for('login') }}">Entrar</a>
-          <a href="{{ url_for('register') }}">Cadastrar</a>
+          <a href="{{ url_for('register') }}" class="btn btn-light">Cadastrar</a>
         {% endif %}
       </nav>
     </div>
@@ -26,13 +38,14 @@
 
   <main class="main-content">
     <div class="container">
-      {% with messages = get_flashed_messages(with_categories=true) %}
+      
+ {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-          <ul id="mensagens">
-            {% for categoria, mensagem in messages %}
-              <li class="flash-{{ categoria }}">{{ mensagem }}</li>
-            {% endfor %}
-          </ul>
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              {{ message }}
+            </div>
+          {% endfor %}
         {% endif %}
       {% endwith %}
 
@@ -42,10 +55,12 @@
 
   <footer class="footer">
     <div class="container">
-      <p>© 2025 Trilha Futuro | Desenvolvido por Nilcélia Malheiros 🌸</p>
+<p>© {{ current_year }} Trilha Futuro | Desenvolvido por Nilcélia Malheiros 🌸</p>
     </div>
   </footer>
 
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/script.js') }}" defer></script>
+  
+  {% block body_scripts %}{% endblock %}
 </body>
 </html>

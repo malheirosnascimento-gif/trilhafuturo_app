@@ -1,25 +1,72 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Chat Mentor{% endblock %}
 
 {% block content %}
-<div class="chat-wrapper" style="margin-top:20px;">
-  <div class="card chat-card">
-    <h2 class="chat-title">Chat Mentor 🤖</h2>
-    <form id="chatForm" method="POST" class="form form-chat">
-      <div class="mb-2">
-        <label for="question">Pergunte sobre uma carreira (ex: UX, Marketing, Dados):</label>
-        <input id="question" type="text" name="question" required placeholder="Digite aqui...">
-      </div>
-      <div class="btn-container">
-        <button type="submit" class="btn btn-primary">Enviar</button>
-      </div>
-    </form>
+<div class="grid" style="margin-top:20px; align-items: flex-start;">
+
+  <div class="col-8">
+    <div class="card">
+      <h3>Chat Mentor IA</h3>
+      <p class="small-muted">Pergunte sobre carreiras ou perfis. Ex: “O que faz um UX designer?”</p>
+
+      <form method="post" class="form-chat">
+        <div class="chat-input-group">
+          <input name="question" placeholder="Digite sua pergunta aqui..." class="form-control" required>
+          <button class="btn btn-primary" type="submit">Perguntar</button>
+        </div>
+      </form>
+    </div>
 
     {% if reply %}
-      <div class="chatbox">
-        <p><strong>Chat:</strong> {{ reply }}</p>
+      <div class="card response-card fade-in" style="margin-top: 1rem;">
+        
+        <div class="user-question">
+          <strong>Você perguntou:</strong>
+          <p>"{{ request.form.question }}"</p>
+        </div>
+        
+        <hr>
+
+        <div class="mentor-reply">
+          <strong>Mentor respondeu:</strong>
+          <p>{{ reply }}</p>
+          
+          {% if carreiras %}
+            <div class="res-section" style="margin-top: 1rem;">
+              <h6>Carreiras Relacionadas</h6>
+              <div class="tag-list">
+                {% for carreira in carreiras %}
+                  <span class="tag">{{ carreira }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          {% if habilidades %}
+            <div class="res-section" style="margin-top: 1rem;">
+              <h6>Habilidades Chave</h6>
+              <div class="tag-list">
+                {% for habilidade in habilidades %}
+                  <span class="tag tag-secondary">{{ habilidade }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
       </div>
     {% endif %}
   </div>
+
+  <div class="col-4 card side-card">
+    <h4>Dicas para Perguntas</h4>
+    <ul class="dica-list">
+        <li>Use palavras-chave como <strong>ux</strong>, <strong>marketing</strong> ou <strong>dados</strong>.</li>
+        <li>Pergunte sobre <strong>habilidades</strong> para uma área.</li>
+        <li>Peça por <strong>tipos de carreira</strong> em um setor.</li>
+    </ul>
+    <p class="small-muted mt-2">Nossa IA está sempre aprendendo para te dar as melhores respostas!</p>
+  </div>
+
 </div>
 {% endblock %}

@@ -1,12 +1,112 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% block title %}Início{% endblock %}
 
 {% block content %}
-<div class="hero-card" style="margin-top:20px;">
-  <h1>Bem-vindo(a) à <span class="highlight">TrilhaFuturo</span></h1>
-  <p class="small-muted">Descubra sua melhor carreira com nosso teste vocacional — 100% digital e gratuito.</p>
-  <div class="btn-container">
-    <a href="{{ url_for('teste') }}" class="btn btn-primary">Começar o teste</a>
+<div class="grid" style="margin-top:20px; row-gap: 2rem;">
+
+  <div class="col-12 card hero-card text-center fade-in">
+    <h1>Bem-vindo(a) à <span class="highlight">Trilha Futuro</span></h1>
+    <p>
+      Descubra seus interesses e receba trilhas de aprendizado personalizadas — gratuito e 100% digital.
+    </p>
+    <div class="btn-group" style="margin-top:16px;">
+      <a class="btn btn-light" href="{{ url_for('register') }}">Começar Jornada</a>
+      <a class="btn btn-outline-light" href="{{ url_for('chat') }}">Falar com Mentor</a>
+    </div>
   </div>
+
+  <div class="col-12 text-center">
+    <h3>Como Funciona?</h3>
+    <p class="small-muted">Em 3 passos simples você encontra sua trilha.</p>
+  </div>
+  <div class="col-4 feature-card">
+    <div class="feature-icon">1</div>
+    <h5>Faça o Teste</h5>
+    <p>Responda nosso teste vocacional rápido e interativo.</p>
+  </div>
+  <div class="col-4 feature-card">
+    <div class="feature-icon">2</div>
+    <h5>Receba seu Perfil</h5>
+    <p>Descubra seu perfil vocacional e carreiras compatíveis.</p>
+  </div>
+  <div class="col-4 feature-card">
+    <div class="feature-icon">3</div>
+    <h5>Explore as Trilhas</h5>
+    <p>Siga trilhas de aprendizado com cursos e materiais selecionados.</p>
+  </div>
+
+  <div class="col-8 card chart-card">
+    <h4>Visão Geral dos Perfis na Plataforma</h4>
+    <canvas id="homeChart"></canvas>
+  </div>
+
+  <div class="col-4 card stats-card">
+    <h4>Nossa Comunidade</h4>
+    <div class="stat-item">
+      <div class="small-muted">Usuários cadastrados</div>
+      <div class="counter count-up" data-to="{{ stats.total_users }}">0</div>
+    </div>
+    <div class="stat-item">
+      <div class="small-muted">Testes realizados</div>
+      <div class="counter count-up" data-to="{{ stats.total_tests }}">0</div>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block body_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Lógica para o Gráfico da Home
+    const ctx = document.getElementById('homeChart');
+    // CORREÇÃO: Pega os dados JSON diretamente do atributo enviado pelo Flask
+    const chartData = JSON.parse('{{ chart_data|safe }}');
+
+    if (ctx && chartData.labels.length > 0) {
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: chartData.labels,
+          datasets: [{
+            label: 'Perfis',
+            data: chartData.values,
+            backgroundColor: ['#4b7bec', '#26de81', '#fc5c65', '#fed330'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    // Lógica para a Animação de Contagem (reutilizada)
+    const counters = document.querySelectorAll('.count-up');
+    counters.forEach(counter => {
+      const target = +counter.getAttribute('data-to');
+      let count = 0;
+      if (target === 0) return;
+      const duration = 1500;
+      const stepTime = Math.abs(Math.floor(duration / target));
+
+      const timer = setInterval(() => {
+        count += 1;
+        counter.innerText = count;
+        if (count >= target) { // Use >= para garantir que atinja o alvo
+          counter.innerText = target; // Garante o valor exato no final
+          clearInterval(timer);
+        }
+      }, stepTime);
+    });
+  });
+</script>
 {% endblock %}

@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -5,7 +6,6 @@ import sqlite3
 import os
 import re
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
 import json
 
 app = Flask(__name__)
@@ -16,11 +16,12 @@ limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"  # Adicionado para maior compatibilidade
+    storage_uri="memory://"
 )
 
 DB_NAME = "trilhafuturo.db"
 
+# --- ESTRUTURAÇÃO DO BANCO DE DADOS ---
 def init_db():
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
@@ -67,9 +68,7 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_resultados_usuario ON resultados_teste(usuario_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_feedbacks_usuario ON feedbacks(usuario_id)")
 
-init_db()
-
-# Funções auxiliares
+# --- FUNÇÕES AUXILIARES ---
 def validate_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
@@ -82,84 +81,100 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
-# Base de conhecimento para chat - EXPANDIDA
+# --- BASES DE CONHECIMENTO (DADOS ESTÁTICOS) ---
 CHAT_KNOWLEDGE_BASE = {
-    "ux": {
-        "resposta": "UX Designer (User Experience Designer) foca na experiência do usuário, criando produtos que sejam eficientes, fáceis de usar e agradáveis. Trabalha com pesquisa, prototipagem e testes de usabilidade.",
-        "carreiras": ["UX Designer", "UI Designer", "Product Designer", "UX Researcher"],
-        "habilidades": ["Pesquisa com usuários", "Wireframing", "Prototipagem", "Testes de usabilidade", "Design Thinking"]
+    "ux": { 
+        "resposta": "UX Designer é um profissional que foca na experiência do usuário, criando produtos intuitivos e agradáveis. Trabalha com pesquisa de usuários, prototipagem e testes de usabilidade.", 
+        "carreiras": ["UX Designer", "UI Designer", "Product Designer", "UX Researcher"], 
+        "habilidades": ["Pesquisa com usuários", "Wireframes", "Testes de usabilidade", "Prototipagem"] 
     },
-    "marketing": {
-        "resposta": "Marketing envolve estratégias de promoção, análise de mercado e comunicação com clientes. Inclui marketing digital, análise de dados e gestão de marcas.",
-        "carreiras": ["Marketing Digital", "Brand Manager", "Analista de Mídia", "Social Media Manager"],
-        "habilidades": ["Análise de mercado", "SEO", "Mídias sociais", "Estratégia de conteúdo", "Google Analytics"]
+    "programação": { 
+        "resposta": "Programação envolve criar soluções através de código. Desenvolvedores trabalham com diversas linguagens e frameworks para construir aplicações web, mobile e desktop.", 
+        "carreiras": ["Desenvolvedor Front-end", "Desenvolvedor Back-end", "Full Stack", "Mobile Developer"], 
+        "habilidades": ["Lógica de programação", "Estruturas de dados", "Versionamento", "Resolução de problemas"] 
     },
-    "dados": {
-        "resposta": "Cientista de dados transforma dados em insights valiosos usando estatística, machine learning e programação. Área em alta demanda no mercado.",
-        "carreiras": ["Cientista de Dados", "Analista de Dados", "Engenheiro de Dados", "BI Analyst"],
-        "habilidades": ["Python", "SQL", "Machine Learning", "Estatística", "Visualização de Dados"]
-    },
-    "programacao": {
-        "resposta": "Programação envolve desenvolvimento de software, aplicativos e sistemas. Pode ser front-end, back-end ou full-stack.",
-        "carreiras": ["Desenvolvedor Full-Stack", "Front-end Developer", "Back-end Developer", "Mobile Developer"],
-        "habilidades": ["Linguagens de programação", "Banco de dados", "APIs", "Versionamento", "Estrutura de dados"]
-    },
-    "design": {
-        "resposta": "Design gráfico combina criatividade e técnica para criar soluções visuais que comunicam ideias de forma eficaz.",
-        "carreiras": ["Designer Gráfico", "Illustrator", "Motion Designer", "Web Designer"],
-        "habilidades": ["Adobe Creative Suite", "Teoria das cores", "Tipografia", "Layout", "Branding"]
+    "dados": { 
+        "resposta": "Área de dados foca em coletar, processar e analisar informações para gerar insights valiosos para empresas.", 
+        "carreiras": ["Cientista de Dados", "Analista de Dados", "Engenheiro de Dados", "BI Analyst"], 
+        "habilidades": ["Estatística", "Python/R", "SQL", "Visualização de dados"] 
     }
 }
 
-# Sistema de recomendações - MELHORADO
 RECOMENDACOES = {
-    "humanas": {
-        "nome": "Área de Humanas",
-        "descricao": "Perfil com forte inclinação para relações humanas, comunicação e pensamento crítico. Você se destaca em atividades que envolvem empatia, diálogo e compreensão do comportamento humano.",
-        "carreiras": ["Psicologia", "Pedagogia", "Serviço Social", "Direito", "Jornalismo", "Recursos Humanos", "Relações Internacionais"],
-        "trilhas": [
-            {"titulo": "Trilha de Psicologia", "link": "#", "duracao": "8 semanas"},
-            {"titulo": "Trilha de Pedagogia", "link": "#", "duracao": "6 semanas"},
-            {"titulo": "Trilha de Serviço Social", "link": "#", "duracao": "7 semanas"}
-        ],
-        "cursos_recomendados": ["Comunicação Eficaz", "Psicologia Social", "Ética Profissional", "Gestão de Pessoas"]
+    "humanas": { 
+        "nome": "Área de Humanas", 
+        "descricao": "Perfil criativo e social, com forte habilidade de comunicação e interesse por relações humanas.", 
+        "carreiras": ["Psicólogo", "Professor", "Jornalista", "Advogado", "RH"], 
+        "trilhas": ["Licenciatura", "Bacharelado em Humanidades"], 
+        "cursos_recomendados": ["Psicologia", "Letras", "História", "Direito", "Pedagogia"] 
     },
-    "exatas": {
-        "nome": "Área de Exatas",
-        "descricao": "Perfil analítico, com aptidão para números, lógica e resolução de problemas complexos. Você tem facilidade com cálculos e pensamento estruturado.",
-        "carreiras": ["Engenharia", "Arquitetura", "Matemática", "Ciência da Computação", "Estatística", "Física", "Economia"],
-        "trilhas": [
-            {"titulo": "Trilha de Engenharia", "link": "#", "duracao": "10 semanas"},
-            {"titulo": "Trilha de Ciência da Computação", "link": "#", "duracao": "12 semanas"},
-            {"titulo": "Trilha de Arquitetura", "link": "#", "duracao": "9 semanas"}
-        ],
-        "cursos_recomendados": ["Lógica de Programação", "Cálculo", "Geometria Analítica", "Estatística Aplicada"]
+    "exatas": { 
+        "nome": "Área de Exatas", 
+        "descricao": "Perfil analítico e lógico, com aptidão para números e resolução de problemas complexos.", 
+        "carreiras": ["Engenheiro", "Cientista de Dados", "Desenvolvedor", "Matemático"], 
+        "trilhas": ["Engenharia", "Tecnologia", "Matemática Aplicada"], 
+        "cursos_recomendados": ["Engenharia", "Ciência da Computação", "Matemática", "Física"] 
     },
-    "biologicas": {
-        "nome": "Área de Biológicas",
-        "descricao": "Perfil com interesse em ciências da vida, saúde e pesquisa biológica. Você se interessa pelo funcionamento dos seres vivos e pelo cuidado com a saúde.",
-        "carreiras": ["Medicina", "Biologia", "Farmácia", "Enfermagem", "Nutrição", "Veterinária", "Biomedicina"],
-        "trilhas": [
-            {"titulo": "Trilha de Medicina", "link": "#", "duracao": "15 semanas"},
-            {"titulo": "Trilha de Biologia", "link": "#", "duracao": "8 semanas"},
-            {"titulo": "Trilha de Nutrição", "link": "#", "duracao": "7 semanas"}
-        ],
-        "cursos_recomendados": ["Biologia Celular", "Anatomia Humana", "Bioquímica", "Genética"]
+    "biologicas": { 
+        "nome": "Área de Biológicas", 
+        "descricao": "Perfil observador e investigativo, com interesse por seres vivos e processos naturais.", 
+        "carreiras": ["Médico", "Biólogo", "Enfermeiro", "Pesquisador"], 
+        "trilhas": ["Medicina", "Biológicas", "Saúde"], 
+        "cursos_recomendados": ["Medicina", "Biologia", "Enfermagem", "Farmácia"] 
     }
 }
 
-# Middleware para verificar autenticação nas rotas protegidas
+# --- MIDDLEWARE DE AUTENTICAÇÃO ---
 @app.before_request
 def check_authentication():
-    protected_routes = ['/dashboard', '/teste', '/feedback', '/chat', '/api/stats']
+    protected_routes = ['/dashboard', '/teste', '/feedback', '/chat', '/api/stats', '/api/chart/profile-distribution']
     if request.path in protected_routes and 'usuario_id' not in session:
         flash("Por favor, faça login para acessar esta página.", "warning")
         return redirect(url_for('login'))
 
-# Rotas
+@app.context_processor
+def inject_current_year():
+    return {'current_year': datetime.utcnow().year}
+
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%d/%m/%Y %H:%M'):
+    if value is None:
+        return ""
+    try:
+        dt_object = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
+        return dt_object.strftime(format)
+    except (ValueError, TypeError):
+        return value
+
+# --- ROTAS PRINCIPAIS E DE AUTENTICAÇÃO ---
 @app.route("/")
 def index():
-    return render_template("index.html")
+    stats = {
+        'total_users': 0,
+        'total_tests': 0
+    }
+    chart_data = {"labels": [], "values": []}
+
+    try:
+        with get_db_connection() as conn:
+            stats['total_users'] = conn.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
+            stats['total_tests'] = conn.execute("SELECT COUNT(*) FROM resultados_teste").fetchone()[0]
+
+            dados_grafico = conn.execute("""
+                SELECT perfil, COUNT(*) as count
+                FROM resultados_teste
+                GROUP BY perfil
+            """).fetchall()
+
+            if dados_grafico:
+                chart_data['labels'] = [row['perfil'].capitalize() for row in dados_grafico]
+                chart_data['values'] = [row['count'] for row in dados_grafico]
+
+    except Exception as e:
+        print(f"Erro ao buscar dados para a página inicial: {e}")
+
+    chart_data_json = json.dumps(chart_data)
+    return render_template("index.html", stats=stats, chart_data=chart_data_json)
 
 @app.route("/register", methods=["GET", "POST"])
 @limiter.limit("5 per minute")
@@ -169,35 +184,31 @@ def register():
         email = request.form.get("email", "").strip().lower()
         senha = request.form.get("senha", "")
 
-        if not nome or not email or not senha:
+        if not all([nome, email, senha]):
             flash("Todos os campos são obrigatórios.", "danger")
             return render_template("register.html")
-
         if not validate_email(email):
             flash("Por favor, insira um e-mail válido.", "danger")
             return render_template("register.html")
-
         if not validate_password(senha):
             flash("A senha deve ter pelo menos 6 caracteres.", "danger")
             return render_template("register.html")
 
         senha_hash = generate_password_hash(senha)
-        conn = get_db_connection()
+
         try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)",
-                (nome, email, senha_hash)
-            )
-            conn.commit()
-            flash("Cadastro realizado com sucesso! Faça login.", "success")
-            return redirect(url_for("login"))
+            with get_db_connection() as conn:
+                conn.execute(
+                    "INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)",
+                    (nome, email, senha_hash)
+                )
+                conn.commit()
+                flash("Cadastro realizado com sucesso! Faça login.", "success")
+                return redirect(url_for("login"))
         except sqlite3.IntegrityError:
             flash("Este e-mail já está cadastrado.", "danger")
         except Exception as e:
-            flash("Erro interno do sistema. Tente novamente.", "danger")
-        finally:
-            conn.close()
+            flash(f"Ocorreu um erro inesperado: {e}", "danger")
 
     return render_template("register.html")
 
@@ -212,25 +223,21 @@ def login():
             flash("Por favor, preencha todos os campos.", "danger")
             return render_template("login.html")
 
-        conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM usuarios WHERE email = ?", (email,))
-            usuario = cursor.fetchone()
+            with get_db_connection() as conn:
+                usuario = conn.execute("SELECT * FROM usuarios WHERE email = ?", (email,)).fetchone()
 
-            if usuario and check_password_hash(usuario["senha"], senha):
-                session["usuario_id"] = usuario["id"]
-                session["usuario_nome"] = usuario["nome"]
-                session["usuario_email"] = usuario["email"]
-                flash(f"Bem-vinda(o), {usuario['nome']}!", "success")
-                next_page = request.args.get('next')
-                return redirect(next_page or url_for("dashboard"))
-            else:
-                flash("E-mail ou senha incorretos.", "danger")
+                if usuario and check_password_hash(usuario["senha"], senha):
+                    session["usuario_id"] = usuario["id"]
+                    session["usuario_nome"] = usuario["nome"]
+                    session["usuario_email"] = usuario["email"]
+                    flash(f"Bem-vinda(o), {usuario['nome']}!", "success")
+                    next_page = request.args.get('next')
+                    return redirect(next_page or url_for("dashboard"))
+                else:
+                    flash("E-mail ou senha incorretos.", "danger")
         except Exception as e:
-            flash("Erro interno do sistema. Tente novamente.", "danger")
-        finally:
-            conn.close()
+            flash(f"Ocorreu um erro inesperado: {e}", "danger")
 
     return render_template("login.html")
 
@@ -240,56 +247,63 @@ def logout():
     flash("Você saiu da sua conta.", "info")
     return redirect(url_for("index"))
 
+# --- ROTAS DO PAINEL DO USUÁRIO ---
 @app.route("/dashboard")
 def dashboard():
-    if 'usuario_id' not in session:
+    usuario_id = session.get("usuario_id")
+    if not usuario_id:
         return redirect(url_for('login'))
-        
-    conn = get_db_connection()
+    
+    historico_testes = []
+    ultimos_feedbacks = []
+    total_testes = 0
+    total_feedbacks = 0
+
     try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT perfil, data_teste FROM resultados_teste
-            WHERE usuario_id = ? ORDER BY data_teste DESC LIMIT 5
-        """, (session["usuario_id"],))
-        historico_testes = cursor.fetchall()
+        with get_db_connection() as conn:
+            # Histórico de testes
+            historico_testes = conn.execute("""
+                SELECT perfil, data_teste FROM resultados_teste
+                WHERE usuario_id = ? ORDER BY data_teste DESC
+            """, (usuario_id,)).fetchall()
 
-        cursor.execute("""
-            SELECT comentario, data_criacao FROM feedbacks
-            WHERE usuario_id = ? ORDER BY data_criacao DESC LIMIT 3
-        """, (session["usuario_id"],))
-        ultimos_feedbacks = cursor.fetchall()
+            # Últimos feedbacks
+            ultimos_feedbacks = conn.execute("""
+                SELECT comentario, data_criacao FROM feedbacks
+                WHERE usuario_id = ? ORDER BY data_criacao DESC LIMIT 3
+            """, (usuario_id,)).fetchall()
 
-        # Contar total de testes realizados
-        cursor.execute("SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?", (session["usuario_id"],))
-        total_testes = cursor.fetchone()[0]
+            # Total de testes
+            total_testes = conn.execute(
+                "SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?",
+                (usuario_id,)
+            ).fetchone()[0]
+
+            # Total de feedbacks
+            total_feedbacks = conn.execute(
+                "SELECT COUNT(*) FROM feedbacks WHERE usuario_id = ?",
+                (usuario_id,)
+            ).fetchone()[0]
 
     except Exception as e:
-        flash("Erro ao carregar dados do dashboard.", "danger")
-        historico_testes = []
-        ultimos_feedbacks = []
-        total_testes = 0
-    finally:
-        conn.close()
+        flash(f"Erro ao carregar dados do dashboard: {e}", "danger")
 
     return render_template("dashboard.html",
-                           nome=session.get("usuario_nome"),
-                           historico_testes=historico_testes,
-                           ultimos_feedbacks=ultimos_feedbacks,
-                           total_testes=total_testes)
+                        nome=session.get("usuario_nome"),
+                        historico_testes=historico_testes,
+                        ultimos_feedbacks=ultimos_feedbacks,
+                        total_testes=total_testes,
+                        total_feedbacks=total_feedbacks)
 
+# --- ROTAS DE FUNCIONALIDADES (TESTE, CHAT, FEEDBACK) ---
 @app.route("/teste", methods=["GET", "POST"])
 def teste():
-    if 'usuario_id' not in session:
-        return redirect(url_for('login'))
-
     if request.method == "POST":
         respostas = request.form.to_dict()
-        if len(respostas) < 5:  # Mínimo de 5 respostas
+        if len(respostas) < 5:
             flash("Você precisa responder pelo menos 5 perguntas para um resultado preciso.", "warning")
             return redirect(url_for("teste"))
 
-        # Algoritmo de pontuação melhorado
         pontuacao_humanas = 0
         pontuacao_exatas = 0
         pontuacao_biologicas = 0
@@ -308,7 +322,6 @@ def teste():
                 pontuacao_exatas += 1
                 pontuacao_humanas += 1
 
-        # Determinar perfil baseado na maior pontuação
         if pontuacao_exatas >= pontuacao_humanas and pontuacao_exatas >= pontuacao_biologicas:
             perfil = "exatas"
         elif pontuacao_biologicas >= pontuacao_humanas and pontuacao_biologicas >= pontuacao_exatas:
@@ -316,39 +329,30 @@ def teste():
         else:
             perfil = "humanas"
 
-        conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO resultados_teste (usuario_id, pontuacao, perfil) VALUES (?, ?, ?)",
-                (session["usuario_id"], max(pontuacao_exatas, pontuacao_humanas, pontuacao_biologicas), perfil)
-            )
-            conn.commit()
+            with get_db_connection() as conn:
+                conn.execute(
+                    "INSERT INTO resultados_teste (usuario_id, pontuacao, perfil) VALUES (?, ?, ?)",
+                    (session["usuario_id"], max(pontuacao_exatas, pontuacao_humanas, pontuacao_biologicas), perfil)
+                )
+                conn.commit()
+                return redirect(url_for("resultado", perfil=perfil))
         except Exception as e:
-            flash("Erro ao salvar resultado do teste.", "danger")
-        finally:
-            conn.close()
-
-        return redirect(url_for("resultado", perfil=perfil))
+            flash(f"Erro ao salvar resultado do teste: {e}", "danger")
 
     return render_template("teste.html")
 
 @app.route("/resultado")
 def resultado():
-    if 'usuario_id' not in session:
-        return redirect(url_for('login'))
-        
     perfil_key = request.args.get("perfil", "humanas")
     perfil = RECOMENDACOES.get(perfil_key, RECOMENDACOES["humanas"])
     nome = session.get("usuario_nome", "Visitante")
+
     return render_template("resultado.html", perfil=perfil, nome=nome)
 
 @app.route("/chat", methods=["GET", "POST"])
 @limiter.limit("10 per minute")
 def chat():
-    if 'usuario_id' not in session:
-        return redirect(url_for('login'))
-        
     reply = None
     carreiras = []
     habilidades = []
@@ -358,98 +362,104 @@ def chat():
         if not pergunta:
             flash("Por favor, digite uma pergunta.", "warning")
         else:
-            # Busca inteligente por termos relacionados
-            termos_encontrados = []
-            for termo, info in CHAT_KNOWLEDGE_BASE.items():
-                if termo in pergunta:
-                    termos_encontrados.append(termo)
-            
-            if termos_encontrados:
-                # Usar o primeiro termo encontrado (poderia ser melhorado para múltiplos termos)
-                termo_principal = termos_encontrados[0]
-                info = CHAT_KNOWLEDGE_BASE[termo_principal]
+            # Lógica de busca na base de conhecimento
+            if "ux" in pergunta or "design" in pergunta or "experiência" in pergunta:
+                info = CHAT_KNOWLEDGE_BASE["ux"]
+                reply = info["resposta"]
+                carreiras = info.get("carreiras", [])
+                habilidades = info.get("habilidades", [])
+            elif "programação" in pergunta or "codigo" in pergunta or "desenvolvedor" in pergunta:
+                info = CHAT_KNOWLEDGE_BASE["programação"]
+                reply = info["resposta"]
+                carreiras = info.get("carreiras", [])
+                habilidades = info.get("habilidades", [])
+            elif "dados" in pergunta or "analise" in pergunta or "estatística" in pergunta:
+                info = CHAT_KNOWLEDGE_BASE["dados"]
                 reply = info["resposta"]
                 carreiras = info.get("carreiras", [])
                 habilidades = info.get("habilidades", [])
             else:
-                # Resposta padrão para perguntas não reconhecidas
-                reply = "Desculpe, ainda não tenho informações específicas sobre esse tema. Posso ajudar com informações sobre: UX Design, Marketing, Ciência de Dados, Programação ou Design. Sobre qual área você gostaria de saber mais?"
+                reply = "Desculpe, não entendi. Pode reformular a pergunta? Posso ajudar com informações sobre UX Design, Programação ou Área de Dados."
 
-            # Salvar no histórico
-            if 'usuario_id' in session:
-                conn = get_db_connection()
-                try:
-                    cursor = conn.cursor()
-                    cursor.execute(
+        if 'usuario_id' in session and reply:
+            try:
+                with get_db_connection() as conn:
+                    conn.execute(
                         "INSERT INTO conversas_chat (usuario_id, pergunta, resposta) VALUES (?, ?, ?)",
                         (session["usuario_id"], pergunta, reply)
                     )
                     conn.commit()
-                except Exception as e:
-                    print(f"Erro ao salvar conversa: {e}")
-                finally:
-                    conn.close()
+            except Exception as e:
+                print(f"Erro ao salvar conversa: {e}")
 
     return render_template("chat.html", reply=reply, carreiras=carreiras, habilidades=habilidades)
 
 @app.route("/feedback", methods=["GET", "POST"])
 def feedback():
-    if 'usuario_id' not in session:
-        return redirect(url_for('login'))
-
     if request.method == "POST":
         comentario = request.form.get("message", "").strip()
+        
         if not comentario:
-            flash("Digite seu feedback antes de enviar.", "warning")
-            return render_template("feedback.html")
-
-        if len(comentario) < 10:
-            flash("O feedback deve ter pelo menos 10 caracteres.", "warning")
-            return render_template("feedback.html")
-
-        conn = get_db_connection()
-        try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO feedbacks (usuario_id, comentario) VALUES (?, ?)",
-                (session["usuario_id"], comentario)
-            )
-            conn.commit()
-            flash("Feedback enviado com sucesso! Obrigado pela contribuição.", "success")
-            return redirect(url_for("dashboard"))
-        except Exception as e:
-            flash("Erro ao enviar feedback. Tente novamente.", "danger")
-        finally:
-            conn.close()
+            flash("Por favor, digite seu feedback.", "danger")
+        elif len(comentario) < 10:
+            flash("O feedback deve ter pelo menos 10 caracteres.", "danger")
+        else:
+            try:
+                with get_db_connection() as conn:
+                    conn.execute(
+                        "INSERT INTO feedbacks (usuario_id, comentario) VALUES (?, ?)",
+                        (session["usuario_id"], comentario)
+                    )
+                    conn.commit()
+                    flash("Feedback enviado com sucesso! Obrigado pela contribuição.", "success")
+                    return redirect(url_for("dashboard"))
+            except Exception as e:
+                flash(f"Erro ao enviar feedback: {e}", "danger")
 
     return render_template("feedback.html")
 
+# --- API E GERENCIAMENTO DE ERROS ---
 @app.route("/api/stats")
 def api_stats():
+    try:
+        with get_db_connection() as conn:
+            total_testes = conn.execute("SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?", 
+                                      (session["usuario_id"],)).fetchone()[0]
+            total_feedbacks = conn.execute("SELECT COUNT(*) FROM feedbacks WHERE usuario_id = ?", 
+                                         (session["usuario_id"],)).fetchone()[0]
+            total_conversas = conn.execute("SELECT COUNT(*) FROM conversas_chat WHERE usuario_id = ?", 
+                                         (session["usuario_id"],)).fetchone()[0]
+
+            return jsonify({
+                "total_testes": total_testes,
+                "total_feedbacks": total_feedbacks,
+                "total_conversas": total_conversas
+            })
+    except Exception as e:
+        return jsonify({"error": "Erro interno"}), 500
+
+@app.route("/api/chart/profile-distribution")
+def profile_distribution_chart():
     if "usuario_id" not in session:
         return jsonify({"error": "Não autorizado"}), 401
 
-    conn = get_db_connection()
     try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?", (session["usuario_id"],))
-        total_testes = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM feedbacks WHERE usuario_id = ?", (session["usuario_id"],))
-        total_feedbacks = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM conversas_chat WHERE usuario_id = ?", (session["usuario_id"],))
-        total_conversas = cursor.fetchone()[0]
-        
-        return jsonify({
-            "total_testes": total_testes,
-            "total_feedbacks": total_feedbacks,
-            "total_conversas": total_conversas
-        })
+        with get_db_connection() as conn:
+            dados_grafico = conn.execute("""
+                SELECT perfil, COUNT(*) as count
+                FROM resultados_teste
+                GROUP BY perfil
+            """).fetchall()
+
+            if not dados_grafico:
+                return jsonify({"labels": [], "values": []})
+
+            labels = [row['perfil'].capitalize() for row in dados_grafico]
+            values = [row['count'] for row in dados_grafico]
+
+            return jsonify({"labels": labels, "values": values})
     except Exception as e:
-        return jsonify({"error": "Erro interno"}), 500
-    finally:
-        conn.close()
+        return jsonify({"error": f"Erro interno: {e}"}), 500
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -464,6 +474,13 @@ def ratelimit_handler(e):
     flash("Muitas tentativas em pouco tempo. Aguarde um momento antes de tentar novamente.", "warning")
     return redirect(request.referrer or url_for("index"))
 
+# --- INICIALIZAÇÃO DO BANCO DE DADOS ---
+# --- EXECUÇÃO DA APLICAÇÃO ---
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5001))  # Usa PORT ou 5001 como fallback
+    init_db() # ADICIONE ESTA LINHA AQUI
+    port = int(os.environ.get("PORT", 5002))
+    app.run(host="0.0.0.0", port=port, debug=True)
+if __name__ == "__main__":
+    init_db()  # Garante que as tabelas sejam criadas
+    port = int(os.environ.get("PORT", 5002))
     app.run(host="0.0.0.0", port=port, debug=True)
