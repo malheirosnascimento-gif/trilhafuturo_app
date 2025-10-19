@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Sua Trilha{% endblock %}
+
+{% block content %}
+<div class="grid" style="margin-top:20px;">
+  <div class="col-8 card">
+    <a href="{{ url_for('resultado', perfil=perfil_key) }}" class="small-muted" style="text-decoration: none;">&larr; Voltar para seu Resultado</a>
+    
+    <h2 class_="title" style="color: #3f51b5; margin-top: 1rem;">{{ trilha.titulo }}</h2>
+    <p><strong>Duração Estimada:</strong> {{ trilha.duracao }}</p>
+    
+    <h4 style="margin-top: 2rem;">Módulos de Aprendizado</h4>
+    <p class="small-muted">Siga os links abaixo para iniciar seus estudos.</p>
+    
+    <ul class="list-group" style="margin-top: 1rem;">
+      {% for modulo in trilha.modulos %}
+        <li class="list-group-item">
+          <span>{{ modulo.nome }}</span>
+          <a href="{{ modulo.link }}" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+            Iniciar Módulo
+          </a>
+        </li>
+      {% else %}
+        <li class="list-group-item">Em breve, novos módulos serão adicionados.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="col-4 card side-card">
+    <h4>Dicas de Estudo</h4>
+    <p class="small-muted">
+      1. Defina um horário fixo para estudar.
+      <br><br>
+      2. Faça anotações e revise o conteúdo.
+      <br><br>
+      3. Pratique com exercícios reais.
+    </p>
+  </div>
+</div>
+{% endblock %}

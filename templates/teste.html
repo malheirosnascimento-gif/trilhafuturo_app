@@ -5,13 +5,13 @@
 <div class="grid" style="margin-top:20px; align-items: flex-start;">
 
   <div class="col-8 card teste-card">
-    <h3 class="title">Teste Vocacional Gamificado</h3>
+    <h3 class="title">Teste Vocacional Aprimorado</h3>
     <p class="subtitle small-muted">Responda com sinceridade para encontrar sua trilha.</p>
 
     <div class="progress-bar-container">
       <div id="progressBar" class="progress-bar"></div>
     </div>
-    <div id="progressText" class="progress-text small-muted">0 de 6 respondidas</div>
+    <div id="progressText" class="progress-text small-muted">0 de 10 respondidas</div>
 
     <form id="testeForm" action="{{ url_for('teste') }}" method="POST" class="form-quiz">
       
@@ -21,12 +21,12 @@
           <label class="question-title">1) Em um sábado livre, você prefere?</label>
           <div class="question-options">
             <label class="question-option" for="q1_opt1">
-              <input type="radio" id="q1_opt1" name="q1" value="analitico" required>
-              <span>Organizar planilhas ou estudar um sistema lógico</span>
+              <input type="radio" id="q1_opt1" name="q1" value="organizado" required>
+              <span>Organizar suas finanças ou planejar a semana</span>
             </label>
             <label class="question-option" for="q1_opt2">
               <input type="radio" id="q1_opt2" name="q1" value="criativo">
-              <span>Criar um design, escrever um texto ou consumir arte</span>
+              <span>Pintar, escrever um texto ou consumir arte</span>
             </label>
           </div>
         </div>
@@ -36,11 +36,11 @@
           <div class="question-options">
             <label class="question-option" for="q2_opt1">
               <input type="radio" id="q2_opt1" name="q2" value="analitico" required>
-              <span>Liderar a parte técnica e a organização das tarefas</span>
+              <span>Analisar os dados e encontrar a falha no processo</span>
             </label>
             <label class="question-option" for="q2_opt2">
-              <input type="radio" id="q2_opt2" name="q2" value="criativo">
-              <span>Propor ideias, conceitos e cuidar da apresentação visual</span>
+              <input type="radio" id="q2_opt2" name="q2" value="social">
+              <span>Apresentar a ideia para o grupo e ouvir feedbacks</span>
             </label>
           </div>
         </div>
@@ -50,53 +50,109 @@
           <div class="question-options">
             <label class="question-option" for="q3_opt1">
               <input type="radio" id="q3_opt1" name="q3" value="analitico" required>
-              <span>Repetitivas e com uma estrutura clara</span>
+              <span>Que exigem foco profundo e resolução de problemas lógicos</span>
             </label>
             <label class="question-option" for="q3_opt2">
-              <input type="radio" id="q3_opt2" name="q3" value="criativo">
-              <span>Variadas e que oferecem liberdade criativa</span>
+              <input type="radio" id="q3_opt2" name="q3" value="social">
+              <span>Que envolvem interação, negociação e trabalho em equipe</span>
             </label>
           </div>
         </div>
 
         <div class="question">
-          <label class="question-title">4) Na hora de aprender, você prefere:</label>
+          <label class="question-title">4) O que te dá mais satisfação?</label>
           <div class="question-options">
             <label class="question-option" for="q4_opt1">
-              <input type="radio" id="q4_opt1" name="q4" value="analitico" required>
-              <span>Cursos de exatas, lógica e ciência de dados</span>
+              <input type="radio" id="q4_opt1" name="q4" value="criativo" required>
+              <span>Terminar um projeto com um visual incrível e original</span>
             </label>
             <label class="question-option" for="q4_opt2">
-              <input type="radio" id="q4_opt2" name="q4" value="criativo">
-              <span>Cursos de design, comunicação e artes</span>
+              <input type="radio" id="q4_opt2" name="q4" value="organizado">
+              <span>Ver um sistema complexo funcionando perfeitamente</span>
             </label>
           </div>
         </div>
 
         <div class="question">
-          <label class="question-title">5) Você sente mais satisfação ao:</label>
+          <label class="question-title">5) Na hora de aprender, você prefere:</label>
           <div class="question-options">
             <label class="question-option" for="q5_opt1">
               <input type="radio" id="q5_opt1" name="q5" value="analitico" required>
-              <span>Resolver um problema lógico complexo</span>
+              <span>Mergulhar em fórmulas, dados e teoremas</span>
             </label>
             <label class="question-option" for="q5_opt2">
-              <input type="radio" id="q5_opt2" name="q5" value="criativo">
-              <span>Criar uma narrativa ou uma peça de arte</span>
+              <input type="radio" id="q5_opt2" name="q5" value="social">
+              <span>Debater ideias, entender pessoas e suas motivações</span>
             </label>
           </div>
         </div>
 
         <div class="question">
-          <label class="question-title">6) Seu tipo de projeto ideal envolve:</label>
+          <label class="question-title">6) Como você resolve um grande problema?</label>
           <div class="question-options">
             <label class="question-option" for="q6_opt1">
-              <input type="radio" id="q6_opt1" name="q6" value="analitico" required>
-              <span>Construir um sistema bem arquitetado e eficiente</span>
+              <input type="radio" id="q6_opt1" name="q6" value="criativo" required>
+              <span>Eu tento uma abordagem nova que ninguém pensou</span>
             </label>
             <label class="question-option" for="q6_opt2">
-              <input type="radio" id="q6_opt2" name="q6" value="criativo">
-              <span>Desenvolver um produto com forte apelo visual e emocional</span>
+              <input type="radio" id="q6_opt2" name="q6" value="organizado">
+              <span>Eu divido o problema em partes menores e sigo um plano</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="question">
+          <label class="question-title">7) O que te atrai mais em um projeto?</label>
+          <div class="question-options">
+            <label class="question-option" for="q7_opt1">
+              <input type="radio" id="q7_opt1" name="q7" value="analitico" required>
+              <span>A complexidade técnica e os padrões nos dados</span>
+            </label>
+            <label class="question-option" for="q7_opt2">
+              <input type="radio" id="q7_opt2" name="q7" value="social">
+              <span>O impacto que ele terá na vida das pessoas</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="question">
+          <label class="question-title">8) Seu ambiente de trabalho ideal é:</label>
+          <div class="question-options">
+            <label class="question-option" for="q8_opt1">
+              <input type="radio" id="q8_opt1" name="q8" value="organizado" required>
+              <span>Silencioso, focado e com metas muito claras</span>
+            </label>
+            <label class="question-option" for="q8_opt2">
+              <input type="radio" id="q8_opt2" name="q8" value="social">
+              <span>Colaborativo, dinâmico e com muita comunicação</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="question">
+          <label class="question-title">9) Você se considera uma pessoa mais:</label>
+          <div class="question-options">
+            <label class="question-option" for="q9_opt1">
+              <input type="radio" id="q9_opt1" name="q9" value="criativo" required>
+              <span>Intuitiva e expressiva</span>
+            </label>
+            <label class="question-option" for="q9_opt2">
+              <input type="radio" id="q9_opt2" name="q9" value="analitico">
+              <span>Lógica e metódica</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="question">
+          <label class="question-title">10) Ao ler um artigo, o que te chama atenção?</label>
+          <div class="question-options">
+            <label class="question-option" for="q10_opt1">
+              <input type="radio" id="q10_opt1" name="q10" value="social" required>
+              <span>O impacto humano e social da notícia</span>
+            </label>
+            <label class="question-option" for="q10_opt2">
+              <input type="radio" id="q10_opt2" name="q10" value="organizado">
+              <span>Os gráficos, estatísticas e a fonte dos dados</span>
             </label>
           </div>
         </div>
@@ -123,7 +179,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('testeForm');
-    const totalQuestions = form.querySelectorAll('.question').length; // AGORA VAI CONTAR 6
+    const totalQuestions = form.querySelectorAll('.question').length;
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
 

@@ -30,20 +30,28 @@
       </div>
     </section>
 
+    <!-- ### ALTERAÇÃO NECESSÁRIA ESTÁ AQUI ### -->
     <section class="res-section">
       <h5><i class="icon-path"></i> Trilhas de Aprendizagem Recomendadas</h5>
       <div class="trilha-card-container">
+        
+        <!-- O loop agora itera sobre as trilhas que vêm do app.py -->
         {% for trilha in perfil.trilhas %}
           <div class="trilha-card">
             <div class="trilha-card-content">
               <h6 class="trilha-title">{{ trilha.titulo }}</h6>
               <p class="trilha-duration small-muted">Duração estimada: {{ trilha.duracao }}</p>
             </div>
-            <a href="{{ trilha.link or '#' }}" class="btn trilha-btn">Iniciar Trilha</a>
+            <!-- O botão agora é um link funcional que leva para a página da trilha específica -->
+            <a href="{{ url_for('trilha', id_trilha=trilha.id_trilha) }}" class="btn trilha-btn">Iniciar Trilha</a>
           </div>
+        {% else %}
+          <p class="small-muted">Nenhuma trilha de aprendizado foi definida para este perfil ainda.</p>
         {% endfor %}
+
       </div>
     </section>
+    <!-- ### FIM DA ALTERAÇÃO ### -->
 
     <div class="btn-container mt-3">
       <a class="btn btn-outline" href="{{ url_for('teste') }}">Fazer o teste novamente</a>

@@ -109,31 +109,97 @@ CHAT_KNOWLEDGE_BASE = {
         "habilidades": ["Estatística", "Python/R", "SQL", "Visualização de dados"] 
     }
 }
-
+     
 RECOMENDACOES = {
     "humanas": { 
         "nome": "Área de Humanas", 
         "descricao": "Perfil criativo e social, com forte habilidade de comunicação e interesse por relações humanas.", 
         "carreiras": ["Psicólogo", "Professor", "Jornalista", "Advogado", "RH"], 
-        "trilhas": ["Licenciatura", "Bacharelado em Humanidades"], 
-        "cursos_recomendados": ["Psicologia", "Letras", "História", "Direito", "Pedagogia"] 
+        "cursos_recomendados": ["Psicologia", "Letras", "História", "Direito", "Pedagogia"],
+        # --- ADIÇÃO ---
+        "trilhas": [
+            {
+                "id_trilha": "humanas_comunicacao",
+                "titulo": "Fundamentos da Comunicação Social",
+                "duracao": "4 Semanas",
+                "modulos": [
+                    {"nome": "Introdução à Comunicação", "link": "#"},
+                    {"nome": "Comunicação e Oratória", "link": "#"},
+                    {"nome": "Escrita Criativa", "link": "#"}
+                ]
+            },
+            {
+                "id_trilha": "humanas_psicologia",
+                "titulo": "Introdução à Psicologia",
+                "duracao": "6 Semanas",
+                "modulos": [
+                    {"nome": "Psicologia Comportamental", "link": "#"},
+                    {"nome": "Processos Cognitivos", "link": "#"}
+                ]
+            }
+        ]
+        # --- FIM DA ADIÇÃO ---
     },
     "exatas": { 
         "nome": "Área de Exatas", 
         "descricao": "Perfil analítico e lógico, com aptidão para números e resolução de problemas complexos.", 
         "carreiras": ["Engenheiro", "Cientista de Dados", "Desenvolvedor", "Matemático"], 
-        "trilhas": ["Engenharia", "Tecnologia", "Matemática Aplicada"], 
-        "cursos_recomendados": ["Engenharia", "Ciência da Computação", "Matemática", "Física"] 
+        "cursos_recomendados": ["Engenharia", "Ciência da Computação", "Matemática", "Física"],
+        # --- ADIÇÃO ---
+        "trilhas": [
+            {
+                "id_trilha": "exatas_programacao",
+                "titulo": "Fundamentos da Programação",
+                "duracao": "8 Semanas",
+                "modulos": [
+                    {"nome": "Lógica de Programação", "link": "#"},
+                    {"nome": "Introdução ao Python", "link": "#"},
+                    {"nome": "Estrutura de Dados", "link": "#"}
+                ]
+            },
+            {
+                "id_trilha": "exatas_dados",
+                "titulo": "Introdução à Análise de Dados",
+                "duracao": "6 Semanas",
+                "modulos": [
+                    {"nome": "SQL Básico", "link": "#"},
+                    {"nome": "Estatística para Dados", "link": "#"},
+                    {"nome": "Visualização (Power BI/Tableau)", "link": "#"}
+                ]
+            }
+        ]
+        # --- FIM DA ADIÇÃO ---
     },
     "biologicas": { 
         "nome": "Área de Biológicas", 
         "descricao": "Perfil observador e investigativo, com interesse por seres vivos e processos naturais.", 
         "carreiras": ["Médico", "Biólogo", "Enfermeiro", "Pesquisador"], 
-        "trilhas": ["Medicina", "Biológicas", "Saúde"], 
-        "cursos_recomendados": ["Medicina", "Biologia", "Enfermagem", "Farmácia"] 
+        "cursos_recomendados": ["Medicina", "Biologia", "Enfermagem", "Farmácia"],
+        # --- ADIÇÃO ---
+        "trilhas": [
+            {
+                "id_trilha": "bio_saude",
+                "titulo": "Fundamentos da Área da Saúde",
+                "duracao": "10 Semanas",
+                "modulos": [
+                    {"nome": "Anatomia Humana Básica", "link": "#"},
+                    {"nome": "Bioquímica Celular", "link": "#"},
+                    {"nome": "Saúde Coletiva", "link": "#"}
+                ]
+            },
+            {
+                "id_trilha": "bio_ambiental",
+                "titulo": "Ecologia e Ciências Ambientais",
+                "duracao": "8 Semanas",
+                "modulos": [
+                    {"nome": "Ecossistemas Brasileiros", "link": "#"},
+                    {"nome": "Gestão Ambiental", "link": "#"}
+                ]
+            }
+        ]
+        # --- FIM DA ADIÇÃO ---
     }
 }
-
 # --- MIDDLEWARE DE AUTENTICAÇÃO ---
 @app.before_request
 def check_authentication():
@@ -379,7 +445,27 @@ def resultado():
     nome = session.get("usuario_nome", "Visitante")
 
     return render_template("resultado.html", perfil=perfil, nome=nome)
+@app.route("/trilha/<id_trilha>")
+def trilha(id_trilha):
+    # Esta rota é acessível publicamente (ou protegida pelo @app.before_request se você preferir)
+    trilha_encontrada = None
+    perfil_key = None
 
+    # Procura a trilha em todos os perfis
+    for key, perfil in RECOMENDACOES.items():
+        for trilha_obj in perfil.get('trilhas', []):
+            if trilha_obj['id_trilha'] == id_trilha:
+                trilha_encontrada = trilha_obj
+                perfil_key = key
+                break
+        if trilha_encontrada:
+            break
+            
+    if not trilha_encontrada:
+        flash("Trilha não encontrada.", "danger")
+        return redirect(url_for("dashboard"))
+
+    return render_template("trilha.html", trilha=trilha_encontrada, perfil_key=perfil_key)
 @app.route("/chat", methods=["GET", "POST"])
 @limiter.limit("10 per minute")
 def chat():
