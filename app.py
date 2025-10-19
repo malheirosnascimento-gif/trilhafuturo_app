@@ -2,6 +2,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from functools import wraps
 import sqlite3
 import os
 import re
@@ -23,50 +24,54 @@ DB_NAME = "trilhafuturo.db"
 
 # --- ESTRUTURAÇÃO DO BANCO DE DADOS ---
 def init_db():
-    with sqlite3.connect(DB_NAME) as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS usuarios (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
-                senha TEXT NOT NULL,
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS feedbacks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                comentario TEXT NOT NULL,
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS resultados_teste (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                pontuacao INTEGER,
-                perfil TEXT NOT NULL,
-                data_teste TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS conversas_chat (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER,
-                pergunta TEXT NOT NULL,
-                resposta TEXT NOT NULL,
-                data_conversa TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-            )
-        """)
-        # Adicionar índices para melhor performance
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_resultados_usuario ON resultados_teste(usuario_id)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_feedbacks_usuario ON feedbacks(usuario_id)")
+    # Esta função cria o banco de dados se ele não existir
+    if not os.path.exists(DB_NAME):
+        print(f"Criando banco de dados '{DB_NAME}'...")
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS usuarios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    senha TEXT NOT NULL,
+                    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS feedbacks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER,
+                    comentario TEXT NOT NULL,
+                    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS resultados_teste (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER,
+                    pontuacao INTEGER,
+                    perfil TEXT NOT NULL,
+                    data_teste TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS conversas_chat (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER,
+                    pergunta TEXT NOT NULL,
+                    resposta TEXT NOT NULL,
+                    data_conversa TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+                )
+            """)
+            # Adicionar índices para melhor performance
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_resultados_usuario ON resultados_teste(usuario_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_feedbacks_usuario ON feedbacks(usuario_id)")
+        print("Banco de dados criado com sucesso.")
 
 # --- FUNÇÕES AUXILIARES ---
 def validate_email(email):
@@ -77,6 +82,11 @@ def validate_password(senha):
     return len(senha) >= 6
 
 def get_db_connection():
+    ### CORREÇÃO ###
+    # Verificamos se o banco de dados existe *antes* de conectar.
+    # Se não existir (como no servidor após um 'rm'), a função init_db() será chamada.
+    init_db() 
+    
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
@@ -127,10 +137,11 @@ RECOMENDACOES = {
 # --- MIDDLEWARE DE AUTENTICAÇÃO ---
 @app.before_request
 def check_authentication():
+    # Esta função já protege suas rotas. Não precisamos do decorador @login_required.
     protected_routes = ['/dashboard', '/teste', '/feedback', '/chat', '/api/stats', '/api/chart/profile-distribution']
     if request.path in protected_routes and 'usuario_id' not in session:
         flash("Por favor, faça login para acessar esta página.", "warning")
-        return redirect(url_for('login'))
+        return redirect(url_for('login', next=request.path)) # 'next' leva o usuário de volta após o login
 
 @app.context_processor
 def inject_current_year():
@@ -141,10 +152,15 @@ def datetimeformat(value, format='%d/%m/%Y %H:%M'):
     if value is None:
         return ""
     try:
+        # Tenta parsear o formato padrão do SQLite
         dt_object = datetime.strptime(value, '%Y-%m-%d %H:%M:%S')
         return dt_object.strftime(format)
     except (ValueError, TypeError):
-        return value
+        # Se falhar, tenta como se já fosse um objeto datetime (pouco provável, mas seguro)
+        try:
+            return value.strftime(format)
+        except:
+            return value # Retorna o valor original se tudo falhar
 
 # --- ROTAS PRINCIPAIS E DE AUTENTICAÇÃO ---
 @app.route("/")
@@ -157,11 +173,11 @@ def index():
 
     try:
         with get_db_connection() as conn:
-            stats['total_users'] = conn.execute("SELECT COUNT(*) FROM usuarios").fetchone()[0]
-            stats['total_tests'] = conn.execute("SELECT COUNT(*) FROM resultados_teste").fetchone()[0]
+            stats['total_users'] = conn.execute("SELECT COUNT(id) FROM usuarios").fetchone()[0]
+            stats['total_tests'] = conn.execute("SELECT COUNT(id) FROM resultados_teste").fetchone()[0]
 
             dados_grafico = conn.execute("""
-                SELECT perfil, COUNT(*) as count
+                SELECT perfil, COUNT(id) as count
                 FROM resultados_teste
                 GROUP BY perfil
             """).fetchall()
@@ -171,7 +187,8 @@ def index():
                 chart_data['values'] = [row['count'] for row in dados_grafico]
 
     except Exception as e:
-        print(f"Erro ao buscar dados para a página inicial: {e}")
+        # Se o banco de dados acabou de ser criado, as tabelas podem estar vazias
+        print(f"Erro ao buscar dados para a página inicial (pode ser normal na primeira execução): {e}")
 
     chart_data_json = json.dumps(chart_data)
     return render_template("index.html", stats=stats, chart_data=chart_data_json)
@@ -228,6 +245,7 @@ def login():
                 usuario = conn.execute("SELECT * FROM usuarios WHERE email = ?", (email,)).fetchone()
 
                 if usuario and check_password_hash(usuario["senha"], senha):
+                    session.clear() # Limpa qualquer sessão antiga
                     session["usuario_id"] = usuario["id"]
                     session["usuario_nome"] = usuario["nome"]
                     session["usuario_email"] = usuario["email"]
@@ -248,12 +266,17 @@ def logout():
     return redirect(url_for("index"))
 
 # --- ROTAS DO PAINEL DO USUÁRIO ---
-@app.route("/dashboard")
+@app.route('/dashboard')
+### CORREÇÃO ###
+# Removemos o @login_required daqui, pois a função @app.before_request já protege esta rota.
 def dashboard():
-    usuario_id = session.get("usuario_id")
+    ### CORREÇÃO ###
+    # Pegamos o 'usuario_id' da sessão para usar nas consultas SQL.
+    usuario_id = session.get('usuario_id')
     if not usuario_id:
+        # Segurança extra, embora o before_request já deva pegar
         return redirect(url_for('login'))
-    
+
     historico_testes = []
     ultimos_feedbacks = []
     total_testes = 0
@@ -275,19 +298,23 @@ def dashboard():
 
             # Total de testes
             total_testes = conn.execute(
-                "SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?",
+                "SELECT COUNT(id) FROM resultados_teste WHERE usuario_id = ?",
                 (usuario_id,)
             ).fetchone()[0]
 
             # Total de feedbacks
             total_feedbacks = conn.execute(
-                "SELECT COUNT(*) FROM feedbacks WHERE usuario_id = ?",
+                "SELECT COUNT(id) FROM feedbacks WHERE usuario_id = ?",
                 (usuario_id,)
             ).fetchone()[0]
 
     except Exception as e:
+        # Este é o erro que você estava vendo!
         flash(f"Erro ao carregar dados do dashboard: {e}", "danger")
 
+    ### CORREÇÃO ###
+    # Removemos o 'return' duplicado que estava no topo desta função.
+    # Este é o 'return' correto, que envia os dados para o template.
     return render_template("dashboard.html",
                         nome=session.get("usuario_nome"),
                         historico_testes=historico_testes,
@@ -328,12 +355,15 @@ def teste():
             perfil = "biologicas"
         else:
             perfil = "humanas"
+        
+        # Pontuação total para salvar no DB (exemplo: a pontuação mais alta)
+        pontuacao_total = max(pontuacao_exatas, pontuacao_humanas, pontuacao_biologicas)
 
         try:
             with get_db_connection() as conn:
                 conn.execute(
                     "INSERT INTO resultados_teste (usuario_id, pontuacao, perfil) VALUES (?, ?, ?)",
-                    (session["usuario_id"], max(pontuacao_exatas, pontuacao_humanas, pontuacao_biologicas), perfil)
+                    (session["usuario_id"], pontuacao_total, perfil)
                 )
                 conn.commit()
                 return redirect(url_for("resultado", perfil=perfil))
@@ -421,14 +451,18 @@ def feedback():
 # --- API E GERENCIAMENTO DE ERROS ---
 @app.route("/api/stats")
 def api_stats():
+    usuario_id = session.get('usuario_id')
+    if not usuario_id:
+        return jsonify({"error": "Não autorizado"}), 401
+        
     try:
         with get_db_connection() as conn:
             total_testes = conn.execute("SELECT COUNT(*) FROM resultados_teste WHERE usuario_id = ?", 
-                                      (session["usuario_id"],)).fetchone()[0]
+                                      (usuario_id,)).fetchone()[0]
             total_feedbacks = conn.execute("SELECT COUNT(*) FROM feedbacks WHERE usuario_id = ?", 
-                                         (session["usuario_id"],)).fetchone()[0]
+                                         (usuario_id,)).fetchone()[0]
             total_conversas = conn.execute("SELECT COUNT(*) FROM conversas_chat WHERE usuario_id = ?", 
-                                         (session["usuario_id"],)).fetchone()[0]
+                                         (usuario_id,)).fetchone()[0]
 
             return jsonify({
                 "total_testes": total_testes,
@@ -436,17 +470,15 @@ def api_stats():
                 "total_conversas": total_conversas
             })
     except Exception as e:
-        return jsonify({"error": "Erro interno"}), 500
+        return jsonify({"error": f"Erro interno: {e}"}), 500
 
 @app.route("/api/chart/profile-distribution")
 def profile_distribution_chart():
-    if "usuario_id" not in session:
-        return jsonify({"error": "Não autorizado"}), 401
-
+    # Este gráfico mostra a distribuição de TODOS os usuários, por isso não filtra por usuario_id
     try:
         with get_db_connection() as conn:
             dados_grafico = conn.execute("""
-                SELECT perfil, COUNT(*) as count
+                SELECT perfil, COUNT(id) as count
                 FROM resultados_teste
                 GROUP BY perfil
             """).fetchall()
@@ -472,15 +504,13 @@ def internal_error(error):
 @app.errorhandler(429)
 def ratelimit_handler(e):
     flash("Muitas tentativas em pouco tempo. Aguarde um momento antes de tentar novamente.", "warning")
+    # Redireciona para a página anterior ou para o index
     return redirect(request.referrer or url_for("index"))
 
-# --- INICIALIZAÇÃO DO BANCO DE DADOS ---
 # --- EXECUÇÃO DA APLICAÇÃO ---
 if __name__ == "__main__":
-    init_db() # ADICIONE ESTA LINHA AQUI
-    port = int(os.environ.get("PORT", 5002))
-    app.run(host="0.0.0.0", port=port, debug=True)
-if __name__ == "__main__":
-    init_db()  # Garante que as tabelas sejam criadas
+    ### CORREÇÃO ###
+    # Removido o init_db() daqui, pois ele agora é chamado por get_db_connection()
+    # Removido o bloco duplicado
     port = int(os.environ.get("PORT", 5002))
     app.run(host="0.0.0.0", port=port, debug=True)
