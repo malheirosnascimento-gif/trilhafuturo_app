@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+
 {% block title %}Meu Dashboard{% endblock %}
 
 {% block content %}
@@ -9,14 +10,39 @@
     </p>
 
     <div class="row mb-5">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
                 <div class="card-body">
                     <h5 class="card-title text-center">Gráfico 1: Perfil dos Usuários (Piloto)</h5>
-                    <canvas id="perfilUsuariosChart"></canvas>
+                    <div style="height: 300px;">
+                        <canvas id="perfilUsuariosChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-center">Suas Ações</h5>
+                    <p class="small text-center text-muted">Pronto para o próximo passo?</p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('teste') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-card-checklist me-2"></i>Fazer novo Teste
+                        </a>
+                        <a href="{{ url_for('feedback') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-chat-left-text me-2"></i>Enviar Feedback
+                        </a>
+                        <a href="{{ url_for('chat') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-robot me-2"></i>Chat com Mentor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-5">
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -25,10 +51,8 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-md-10">
+        
+        <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title text-center">Gráfico 3: Análise Categórica dos Feedbacks</h5>
@@ -43,7 +67,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-
+        
         // --- Dados Fictícios (os mesmos do Colab) ---
         const dadosPerfilUsuario = {
             labels: ['Estudante do Ensino Médio', 'Calouro Universitário', 'Em Transição de Carreira'],
@@ -75,6 +99,10 @@
                         'rgba(75, 192, 192, 0.7)'
                     ]
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
 
