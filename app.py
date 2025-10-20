@@ -123,9 +123,9 @@ RECOMENDACOES = {
                 "titulo": "Fundamentos da Comunicação Social",
                 "duracao": "4 Semanas",
                 "modulos": [
-                    {"nome": "Introdução à Comunicação", "link": "#"},
-                    {"nome": "Comunicação e Oratória", "link": "#"},
-                    {"nome": "Escrita Criativa", "link": "#"}
+                    {"nome": "Introdução à Comunicação", "link": "https://youtu.be/80S_VmT8SQc?si=3QASrbXX7RstTAEz"},
+                    {"nome": "Comunicação e Oratória", "link": "https://youtu.be/cTQHrNOlAUo?si=wBubbzGVrTXemK_C"},
+                    {"nome": "Escrita Criativa", "link": "https://youtu.be/pb4DzrrGQvc?si=RxSHC7qlr4hgGv8j"},
                 ]
             },
             {
@@ -133,8 +133,8 @@ RECOMENDACOES = {
                 "titulo": "Introdução à Psicologia",
                 "duracao": "6 Semanas",
                 "modulos": [
-                    {"nome": "Psicologia Comportamental", "link": "#"},
-                    {"nome": "Processos Cognitivos", "link": "#"}
+                    {"nome": "Psicologia Comportamental", "link": "https://youtu.be/I_yhJ8MG_MM?si=dV8FdrOWXz5G2U4a"},
+                    {"nome": "Processos Cognitivos", "link": "https://youtu.be/k9WBY0k5MC0?si=I1Ru9w1iruBStUlC"}
                 ]
             }
         ]
@@ -152,9 +152,9 @@ RECOMENDACOES = {
                 "titulo": "Fundamentos da Programação",
                 "duracao": "8 Semanas",
                 "modulos": [
-                    {"nome": "Lógica de Programação", "link": "#"},
-                    {"nome": "Introdução ao Python", "link": "#"},
-                    {"nome": "Estrutura de Dados", "link": "#"}
+                    {"nome": "Lógica de Programação", "link": "https://youtu.be/epf-WQdVis0?si=Xj9QQJ1WKDJsHQNu"},
+                    {"nome": "Introdução ao Python", "link": "https://youtu.be/g_R_Asf6Co0?si=HgOBVqro1UuXiIZA"},
+                    {"nome": "Estrutura de Dados", "link": "https://youtu.be/hCXDjdcn31A?si=bd9X7_Dbf2p9lNLq"}
                 ]
             },
             {
@@ -162,9 +162,9 @@ RECOMENDACOES = {
                 "titulo": "Introdução à Análise de Dados",
                 "duracao": "6 Semanas",
                 "modulos": [
-                    {"nome": "SQL Básico", "link": "#"},
-                    {"nome": "Estatística para Dados", "link": "#"},
-                    {"nome": "Visualização (Power BI/Tableau)", "link": "#"}
+                    {"nome": "SQL Básico", "link": "https://youtu.be/QBDjB2V_uDM?si=VrErtEYCsNQc8Oey"},
+                    {"nome": "Estatística para Dados", "link": "https://youtu.be/n1ALcRhrn50?si=T38VeVaHO7P2rZQ_"},
+                    {"nome": "Visualização (Power BI/Tableau)", "link": "https://youtu.be/37oxzq2pSbI?si=n962WLbZeDp3DEOm"}
                 ]
             }
         ]
@@ -182,9 +182,9 @@ RECOMENDACOES = {
                 "titulo": "Fundamentos da Área da Saúde",
                 "duracao": "10 Semanas",
                 "modulos": [
-                    {"nome": "Anatomia Humana Básica", "link": "#"},
-                    {"nome": "Bioquímica Celular", "link": "#"},
-                    {"nome": "Saúde Coletiva", "link": "#"}
+                    {"nome": "Anatomia Humana Básica", "link": "https://youtu.be/5c3Pp-b7uwc?si=0-Sdz7-UHXoMj1iV"},
+                    {"nome": "Bioquímica Celular", "link": "https://youtu.be/56ZQadxAgKA?si=vqgceM2brkQaTBQX"},
+                    {"nome": "Saúde Coletiva", "link": "https://www.youtube.com/live/9r9bZYE-RR4?si=wLhHVfhinrz6ZCXw"},
                 ]
             },
             {
@@ -192,8 +192,8 @@ RECOMENDACOES = {
                 "titulo": "Ecologia e Ciências Ambientais",
                 "duracao": "8 Semanas",
                 "modulos": [
-                    {"nome": "Ecossistemas Brasileiros", "link": "#"},
-                    {"nome": "Gestão Ambiental", "link": "#"}
+                    {"nome": "Ecossistemas Brasileiros", "link": "https://youtu.be/r6Uhi4gb4hk?si=ZLVChIrVELE8jhZ_"},
+                    {"nome": "Gestão Ambiental", "link": "https://youtu.be/k5ZTYJVbcDY?si=_bKvB_HEi_noCqrs"}
                 ]
             }
         ]
